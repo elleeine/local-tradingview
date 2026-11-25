@@ -38,3 +38,10 @@ policy can block npm on Windows.
 - `AGENTS.md` — notes for AI coding assistants
 
 See `quant-terminal/README.md` for the full feature documentation.
+
+## Pushing changes
+
+This repo uses an SSH key stored in `~/.ssh/id_ed25519_local_tradingview`, so no
+token or password is needed. The `post-commit` hook pushes each commit to GitHub
+automatically. If you are offline, the commit still succeeds and you can push
+later with `git push`.
