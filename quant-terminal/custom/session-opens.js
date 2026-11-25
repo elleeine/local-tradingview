@@ -1,10 +1,10 @@
 // Opening bells for the Sydney, Tokyo, London and New York exchanges.
 // Exchange clocks are used with their own daylight saving rules; the app shows bar times in its local zone.
 const SESSIONS = [
-  { zone: 'Australia/Sydney', bell: 600, label: 'Sydney', color: '#42a5f5' },
-  { zone: 'Asia/Tokyo', bell: 540, label: 'Tokyo', color: '#ab47bc' },
-  { zone: 'Europe/London', bell: 480, label: 'London', color: '#26a69a' },
-  { zone: 'America/New_York', bell: 570, label: 'New York', color: '#ffa726' },
+  { zone: 'Australia/Sydney', bell: 600, utcGuess: 1410, label: 'Sydney', color: '#42a5f5' },
+  { zone: 'Asia/Tokyo', bell: 540, utcGuess: 0, label: 'Tokyo', color: '#ab47bc' },
+  { zone: 'Europe/London', bell: 480, utcGuess: 450, label: 'London', color: '#26a69a' },
+  { zone: 'America/New_York', bell: 570, utcGuess: 810, label: 'New York', color: '#ffa726' },
 ].map((s) => ({
   ...s,
   fmt: new Intl.DateTimeFormat('en-GB', {
@@ -34,17 +34,19 @@ export default {
   calc(bars) {
     const markers = [];
     const seen = new Set();
-    for (let i = 0; i < bars.length; i++) {
+    // The last bar is still forming; a bell inside it has not happened yet.
+    for (let i = 0; i < bars.length - 1; i++) {
       const start = bars[i].time;
-      const step = i + 1 < bars.length
-        ? bars[i + 1].time - start
-        : i > 0 ? start - bars[i - 1].time : 3600;
-      const end = start + (step > 0 ? step : 3600);
+      const step = bars[i + 1].time - start;
+      // A daily or weekly bar spans many local dates; it has no single bell.
+      if (step <= 0 || step > 21600) continue;
+      const utcMins = (((start % 86400) + 86400) % 86400) / 60;
       for (const s of SESSIONS) {
+        // Each bell sits within a few hours of a fixed UTC time, even across DST.
+        const gap = Math.abs(utcMins - s.utcGuess);
+        if (Math.min(gap, 1440 - gap) > 150) continue;
         const a = localParts(s, start);
-        const b = localParts(s, end);
-        // A daily or weekly bar spans many local dates; it has no single bell.
-        if (a.date !== b.date || s.bell < a.mins || s.bell >= b.mins) continue;
+        if (s.bell < a.mins || s.bell >= a.mins + step / 60) continue;
         const key = `${s.zone}|${a.date}`;
         if (seen.has(key)) continue;
         seen.add(key);

@@ -43,3 +43,28 @@ test('a daily bar spanning a whole day is not marked', () => {
 test('the indicator passes the app validator', () => {
   assert.doesNotThrow(() => registerIndicator({ ...indicator, id: 'custom:session-opens' }));
 });
+
+test('only formats bar times near a session open', () => {
+  const original = Intl.DateTimeFormat.prototype.formatToParts;
+  let calls = 0;
+  Intl.DateTimeFormat.prototype.formatToParts = function (...args) {
+    calls++;
+    return original.apply(this, args);
+  };
+  try {
+    indicator.calc(barsFrom('2026-01-01T00:00:00Z', '2026-02-01T00:00:00Z'), {}, {});
+  } finally {
+    Intl.DateTimeFormat.prototype.formatToParts = original;
+  }
+  assert.ok(calls < 4000, `formatToParts called ${calls} times on a month of 15m bars`);
+});
+
+test('a bell later in the forming bar is not marked early', () => {
+  const bars = barsFrom('2026-01-15T14:00:00Z', '2026-01-15T14:30:00Z', 300);
+  assert.ok(!texts(bars).some((t) => t.startsWith('New York')), 'the 14:30Z bell is in the forming bar');
+});
+
+test('a bell between hourly bars lands on the bar containing it', () => {
+  const bars = barsFrom('2026-01-15T06:00:00Z', '2026-01-15T18:00:00Z', 3600);
+  assert.ok(texts(bars).includes(`New York 09:30@${at('2026-01-15T14:00:00Z')}`));
+});
