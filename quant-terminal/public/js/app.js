@@ -185,7 +185,7 @@ class App {
       const base = cfgs[i] || {
         ...structuredClone(cfgs[0] || {}),
         tf: tfs[i % tfs.length],
-        indicators: [],
+        indicators: [{ uid: newUid(), id: "custom:session-opens", params: {} }],
       };
       const pane = new ChartPane(this, el, base);
       this.panes.push(pane);
