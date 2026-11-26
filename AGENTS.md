@@ -6,6 +6,17 @@ terminal: charts, 88 indicators (no per-chart limit), drawing tools, alerts,
 screener, heatmap, seasonals, calendars, news, company financials, strategy tester
 with quant checks, bar replay, paper trading. The app lives in `quant-terminal/`.
 
+## Current state (2026-11-26)
+- Git repo on `main`, pushed to `https://github.com/elleeine/local-tradingview`.
+- `origin` uses SSH key `~/.ssh/id_ed25519_local_tradingview` — no tokens needed.
+- `.git/hooks/post-commit` pushes every commit. If offline,
+  `.git/hooks/retry-push.ps1` retries every 30 seconds for up to 6 hours.
+- `quant-terminal/data/` is gitignored: saved charts, alerts and watchlists stay local.
+- Custom indicators live in `quant-terminal/custom/` and are committed.
+- Saved chart is BTCUSDT 1h with `custom:session-opens` enabled.
+- Verify with `node scripts/check.js` from `quant-terminal/`; 218 tests pass.
+- App runs at `http://localhost:3777`; start it with `start.bat` for a lasting session.
+
 ## Hard requirements
 - **Node.js 18+ only.** Nothing else: no API keys, no accounts, no `npm install`,
   no sudo/admin, no other installs.
